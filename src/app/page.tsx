@@ -408,13 +408,13 @@ export default function LandingPage() {
                         >
                           {status.postmaster.data?.spamRate !== undefined
                             ? `${(
-                                status.postmaster.data.spamRate * 100
+                                status.postmaster.data?.spamRate * 100
                               ).toFixed(2)}%`
                             : "No data"}
                         </StatusBadge>
                         {status.postmaster.data?.reputation && (
                           <div className="text-xs text-gray-500 mt-1">
-                            {status.postmaster.data.reputation}
+                            {status.postmaster.data?.reputation}
                           </div>
                         )}
                       </div>
