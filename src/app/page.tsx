@@ -397,27 +397,29 @@ export default function LandingPage() {
                   loading={status.postmaster.loading}
                   error={status.postmaster.error}
                   data={
-                    status.postmaster.data && (
+                    status.postmaster.data ? (
                       <div>
                         <StatusBadge
                           status={
                             getSpamRateStatus(
-                              status.postmaster.data.spamRate
+                              status.postmaster.data?.spamRate
                             ) as "pass" | "warn" | "fail" | "idle"
                           }
                         >
-                          {status.postmaster.data.spamRate !== undefined
+                          {status.postmaster.data?.spamRate !== undefined
                             ? `${(
                                 status.postmaster.data.spamRate * 100
                               ).toFixed(2)}%`
                             : "No data"}
                         </StatusBadge>
-                        {status.postmaster.data.reputation && (
+                        {status.postmaster.data?.reputation && (
                           <div className="text-xs text-gray-500 mt-1">
                             {status.postmaster.data.reputation}
                           </div>
                         )}
                       </div>
+                    ) : (
+                      <div className="text-gray-500">No data</div>
                     )
                   }
                   lastUpdated={status.postmaster.lastUpdated}
