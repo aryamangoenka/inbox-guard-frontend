@@ -124,15 +124,15 @@ export function useQuickStatus(domain: string) {
     try {
       const result = await apiGet<{
         success: boolean;
-        data: { spam_rate: number; domain_reputation: string };
+        data: { spam_rate: number; domain_reputation: string } | null;
       }>('/postmaster/latest', { domain });
       
       updateTileState('postmaster', {
         loading: false,
-        data: {
+        data: result.data ? {
           spamRate: result.data.spam_rate,
           reputation: result.data.domain_reputation,
-        },
+        } : null,
       });
     } catch (error) {
       updateTileState('postmaster', {

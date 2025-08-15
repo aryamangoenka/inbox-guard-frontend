@@ -206,7 +206,9 @@ export default function PostmasterPage() {
           day: "numeric",
         }),
         spam_rate: (record.spam_rate ?? 0) * 100, // Convert to percentage
-        reputation_score: getReputationScore(record.domain_reputation ?? "UNKNOWN"),
+        reputation_score: getReputationScore(
+          record.domain_reputation ?? "UNKNOWN"
+        ),
         reputation_label: record.domain_reputation ?? "UNKNOWN",
       }))
       .reverse() || [];
@@ -232,7 +234,7 @@ export default function PostmasterPage() {
         </div>
 
         {/* Current Status */}
-        {latestData && (
+        {latestData && latestData.data && (
           <FormCard title="Current Status" className="mb-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
