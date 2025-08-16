@@ -13,10 +13,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Start with what exists today. If only "/" exists, that's fine.
   const publicPaths = [
     '/',            // landing (marketing)
-    // '/tools',    // parent index if you create one
-    // '/tools/spf-check',
-    // '/tools/header-tester',
-    // '/tools/spam-rate-checker',
+    '/tools/spf',   // SPF checker tool
+    '/tools/header-tester', // Header tester tool
+    '/tools/spam-explainer', // Spam rate explainer tool
     // '/privacy',
     // '/terms',
   ]
@@ -24,7 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return publicPaths.map((path) => ({
     url: `${base}${path}`,
     lastModified: now,
-    changeFrequency: 'daily',
+    changeFrequency: 'daily' as const,
     priority: path === '/' ? 1 : 0.7,
   }))
 } 
