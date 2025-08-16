@@ -5,8 +5,62 @@ import { RefreshCw, Play, Pause } from "lucide-react";
 import { useDomain } from "@/lib/domain";
 import { useQuickStatus } from "@/hooks/useQuickStatus";
 import { StatusBadge } from "@/components/StatusBadge";
-import { QuickStatusTile } from "@/components/QuickStatusTile";
 import AlertsBell from "@/components/AlertsBell";
+
+function QuickStatusTile({
+  title,
+  loading,
+  error,
+  data,
+  lastUpdated,
+}: {
+  title: string;
+  loading: boolean;
+  error?: string;
+  data?: React.ReactNode;
+  lastUpdated?: number;
+}) {
+  if (loading) {
+    return (
+      <div className="text-center">
+        <div className="mb-2 flex justify-center">
+          <div className="h-6 w-16 bg-gray-200 rounded-full animate-pulse"></div>
+        </div>
+        <div className="h-4 w-20 bg-gray-200 rounded mx-auto mb-1 animate-pulse"></div>
+        <div className="text-xs text-gray-500">{title}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center">
+        <div className="mb-2 flex justify-center">
+          <StatusBadge status="fail">Error</StatusBadge>
+        </div>
+        <div
+          className="text-sm font-medium text-gray-900 truncate"
+          title={error}
+        >
+          {error.length > 20 ? `${error.substring(0, 20)}...` : error}
+        </div>
+        <div className="text-xs text-gray-500 mt-1">{title}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-center">
+      <div className="mb-2">{data}</div>
+      {lastUpdated && (
+        <div className="text-xs text-gray-400 mb-1">
+          {new Date(lastUpdated).toLocaleTimeString()}
+        </div>
+      )}
+      <div className="text-xs text-gray-500">{title}</div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { domain, setDomain } = useDomain();
@@ -32,7 +86,7 @@ export default function DashboardPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-2">
-            Monitor your domain's email security and deliverability status
+            Monitor your domain&apos;s email security and deliverability status
           </p>
         </div>
 
@@ -143,20 +197,20 @@ export default function DashboardPage() {
                     <div>
                       <StatusBadge
                         status={
-                          status.dns.data.spf.valid &&
-                          status.dns.data.dmarc.valid
+                          status.dns.data.spfStatus === "pass" &&
+                          status.dns.data.dmarcValid
                             ? "pass"
                             : "fail"
                         }
                       >
-                        {status.dns.data.spf.valid &&
-                        status.dns.data.dmarc.valid
+                        {status.dns.data.spfStatus === "pass" &&
+                        status.dns.data.dmarcValid
                           ? "Configured"
                           : "Issues Found"}
                       </StatusBadge>
                       <div className="text-xs text-gray-500 mt-1">
-                        SPF: {status.dns.data.spf.valid ? "✓" : "✗"} | DMARC:{" "}
-                        {status.dns.data.dmarc.valid ? "✓" : "✗"}
+                        SPF: {status.dns.data.spfStatus === "pass" ? "✓" : "✗"}{" "}
+                        | DMARC: {status.dns.data.dmarcValid ? "✓" : "✗"}
                       </div>
                     </div>
                   )
@@ -172,13 +226,18 @@ export default function DashboardPage() {
                   status.dkim.data && (
                     <div>
                       <StatusBadge
-                        status={status.dkim.data.valid ? "pass" : "fail"}
+                        status={status.dkim.data.found ? "pass" : "fail"}
                       >
-                        {status.dkim.data.valid ? "Valid" : "Invalid"}
+                        {status.dkim.data.found ? "Configured" : "Missing"}
                       </StatusBadge>
-                      {status.dkim.data.selector && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          {status.dkim.data.selector}
+                      {status.dkim.data.target && (
+                        <div
+                          className="text-xs text-gray-500 mt-1 truncate"
+                          title={status.dkim.data.target}
+                        >
+                          {status.dkim.data.target.length > 20
+                            ? `${status.dkim.data.target.substring(0, 20)}...`
+                            : status.dkim.data.target}
                         </div>
                       )}
                     </div>

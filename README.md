@@ -58,6 +58,10 @@ Configure these in your `.env.local` file:
 # Required: Backend API URL
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 
+# Required: Base URL for the application (used in sitemap and robots)
+# Remove trailing slash if present
+NEXT_PUBLIC_BASE_URL=https://inbox-guard-frontend.vercel.app
+
 # Optional: API key for write operations
 NEXT_PUBLIC_API_KEY=your_api_key_here
 

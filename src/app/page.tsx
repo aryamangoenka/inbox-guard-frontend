@@ -59,6 +59,13 @@ const features = [
   },
 ];
 
+const stats = [
+  { icon: Lock, value: "99.9%", label: "Email Threats Blocked" },
+  { icon: Clock, value: "<5 min", label: "Setup Time" },
+  { icon: Award, value: "<0.1%", label: "False Positives" },
+  { icon: Users, value: "500+", label: "Enterprise Clients" },
+];
+
 const tools = [
   {
     icon: Shield,
@@ -95,13 +102,6 @@ const tools = [
     href: "/postmaster",
     color: "bg-indigo-500",
   },
-];
-
-const stats = [
-  { icon: Lock, value: "99.9%", label: "Email Threats Blocked" },
-  { icon: Clock, value: "<5 min", label: "Setup Time" },
-  { icon: Award, value: "<0.1%", label: "False Positives" },
-  { icon: Users, value: "500+", label: "Enterprise Clients" },
 ];
 
 export default function LandingPage() {
