@@ -7,7 +7,7 @@ import type { MetadataRoute } from 'next'
  * Add tool pages here as you ship them.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = (process.env.NEXT_PUBLIC_BASE_URL ?? 'https://inbox-guard-frontend.vercel.app').replace(/\/+$/, '')
+  const base = (process.env.NEXT_PUBLIC_BASE_URL ?? 'https://theinboxguard.com').replace(/\/+$/, '')
   const now = new Date()
 
   // Start with what exists today. If only "/" exists, that's fine.
