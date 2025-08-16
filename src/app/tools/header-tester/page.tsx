@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { lintUnsubscribeHeaders, getComplianceStatus } from "@/lib/headers";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://theinboxguard.com";
+
 export default function HeaderTesterPage() {
   const [raw, setRaw] = useState("");
   const lint = lintUnsubscribeHeaders(raw);
@@ -23,13 +26,13 @@ export default function HeaderTesterPage() {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             name: "Email Header Tester",
-            url: `${process.env.NEXT_PUBLIC_BASE_URL}/tools/header-tester`,
+            url: `${BASE_URL}/tools/header-tester`,
             applicationCategory: "Utility",
             operatingSystem: "Any",
             provider: {
               "@type": "Organization",
               name: "Inbox Guard",
-              url: process.env.NEXT_PUBLIC_BASE_URL,
+              url: BASE_URL,
             },
           }),
         }}

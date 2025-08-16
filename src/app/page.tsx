@@ -15,6 +15,9 @@ import {
   Award,
 } from "lucide-react";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://theinboxguard.com";
+
 // SEO metadata for landing page
 export const metadata: Metadata = {
   title: "Inbox Guard — Keep Emails Out of Spam",
@@ -24,9 +27,9 @@ export const metadata: Metadata = {
     title: "Inbox Guard — Keep Emails Out of Spam",
     description:
       "Automated SPF, DKIM, DMARC fixes for Shopify & Klaviyo senders. Free tools to check SPF lookups, unsubscribe headers, and spam rates.",
-    url: process.env.NEXT_PUBLIC_BASE_URL,
+    url: "/",
     siteName: "Inbox Guard",
-    images: [`${process.env.NEXT_PUBLIC_BASE_URL}/og-image.png`],
+    images: ["/og-image.png"],
     type: "website",
   },
   twitter: {
@@ -34,7 +37,7 @@ export const metadata: Metadata = {
     title: "Inbox Guard — Keep Emails Out of Spam",
     description:
       "Automated SPF, DKIM, DMARC fixes for Shopify & Klaviyo senders. Free tools to check SPF lookups, unsubscribe headers, and spam rates.",
-    images: [`${process.env.NEXT_PUBLIC_BASE_URL}/og-image.png`],
+    images: ["/og-image.png"],
   },
 };
 
@@ -136,10 +139,10 @@ export default function LandingPage() {
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "Inbox Guard",
-            url: process.env.NEXT_PUBLIC_BASE_URL,
+            url: BASE_URL,
             potentialAction: {
               "@type": "SearchAction",
-              target: `${process.env.NEXT_PUBLIC_BASE_URL}/tools/spf?domain={search_term_string}`,
+              target: `${BASE_URL}/tools/spf?domain={search_term_string}`,
               "query-input": "required name=search_term_string",
             },
           }),

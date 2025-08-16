@@ -10,6 +10,9 @@ import {
   formatSpamRate,
 } from "@/lib/spam";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://theinboxguard.com";
+
 export default function SpamExplainerPage() {
   const [inputRate, setInputRate] = useState("");
 
@@ -36,13 +39,13 @@ export default function SpamExplainerPage() {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             name: "Spam Rate Explainer",
-            url: `${process.env.NEXT_PUBLIC_BASE_URL}/tools/spam-explainer`,
+            url: `${BASE_URL}/tools/spam-explainer`,
             applicationCategory: "Utility",
             operatingSystem: "Any",
             provider: {
               "@type": "Organization",
               name: "Inbox Guard",
-              url: process.env.NEXT_PUBLIC_BASE_URL,
+              url: BASE_URL,
             },
           }),
         }}

@@ -4,14 +4,14 @@ export const metadata: Metadata = {
   title: "Free SPF Checker — Inbox Guard",
   description:
     "Check your SPF record for lookup limits, flattening issues, and deliverability risks.",
-  alternates: { canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/tools/spf` },
+  alternates: { canonical: "/tools/spf" },
   openGraph: {
     title: "Free SPF Checker — Inbox Guard",
     description:
       "Check your SPF record for lookup limits, flattening issues, and deliverability risks.",
-    url: `${process.env.NEXT_PUBLIC_BASE_URL}/tools/spf`,
+    url: "/tools/spf",
     siteName: "Inbox Guard",
-    images: [`${process.env.NEXT_PUBLIC_BASE_URL}/og-tools-spf.png`],
+    images: ["/og-tools-spf.png"],
     type: "website",
   },
   twitter: {
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Free SPF Checker — Inbox Guard",
     description:
       "Check your SPF record for lookup limits, flattening issues, and deliverability risks.",
-    images: [`${process.env.NEXT_PUBLIC_BASE_URL}/og-tools-spf.png`],
+    images: ["/og-tools-spf.png"],
   },
 };
 

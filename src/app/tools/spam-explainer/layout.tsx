@@ -4,16 +4,14 @@ export const metadata: Metadata = {
   title: "Spam Rate Explainer — Inbox Guard",
   description:
     "Paste CSV or JSON to understand Gmail spam-rate thresholds (0.25/0.3) and risk level.",
-  alternates: {
-    canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/tools/spam-explainer`,
-  },
+  alternates: { canonical: "/tools/spam-explainer" },
   openGraph: {
     title: "Spam Rate Explainer — Inbox Guard",
     description:
       "Paste CSV or JSON to understand Gmail spam-rate thresholds (0.25/0.3) and risk level.",
-    url: `${process.env.NEXT_PUBLIC_BASE_URL}/tools/spam-explainer`,
+    url: "/tools/spam-explainer",
     siteName: "Inbox Guard",
-    images: [`${process.env.NEXT_PUBLIC_BASE_URL}/og-tools-spam.png`],
+    images: ["/og-tools-spam.png"],
     type: "website",
   },
   twitter: {
@@ -21,7 +19,7 @@ export const metadata: Metadata = {
     title: "Spam Rate Explainer — Inbox Guard",
     description:
       "Paste CSV or JSON to understand Gmail spam-rate thresholds (0.25/0.3) and risk level.",
-    images: [`${process.env.NEXT_PUBLIC_BASE_URL}/og-tools-spam.png`],
+    images: ["/og-tools-spam.png"],
   },
 };
 

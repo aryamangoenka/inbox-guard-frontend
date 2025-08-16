@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { countSpfLookups, getSpfTone, getSpfGuidance } from "@/lib/spf";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://theinboxguard.com";
+
 export default function SpfToolPage() {
   const [txt, setTxt] = useState("");
   const count = txt.trim() ? countSpfLookups(txt) : 0;
@@ -24,13 +27,13 @@ export default function SpfToolPage() {
             "@context": "https://schema.org",
             "@type": "WebApplication",
             name: "SPF Checker",
-            url: `${process.env.NEXT_PUBLIC_BASE_URL}/tools/spf`,
+            url: `${BASE_URL}/tools/spf`,
             applicationCategory: "Utility",
             operatingSystem: "Any",
             provider: {
               "@type": "Organization",
               name: "Inbox Guard",
-              url: process.env.NEXT_PUBLIC_BASE_URL,
+              url: BASE_URL,
             },
           }),
         }}

@@ -4,6 +4,9 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ToastHost";
 import { Navigation } from "@/components/Navigation";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://theinboxguard.com";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,6 +30,7 @@ export const metadata: Metadata = {
     "domain protection",
   ],
   authors: [{ name: "Inbox Guard" }],
+  metadataBase: new URL(BASE_URL),
 };
 
 export const viewport: Viewport = {
