@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 import { ToastProvider } from "@/components/ToastHost";
 import { Navigation } from "@/components/Navigation";
 
@@ -48,12 +49,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="min-h-screen bg-gray-50">
-          <Navigation />
-          <ToastProvider>
-            <main className="flex-1">{children}</main>
-          </ToastProvider>
-        </div>
+        <ClerkProvider>
+          <div className="min-h-screen bg-gray-50">
+            <Navigation />
+            <ToastProvider>
+              <main className="flex-1">{children}</main>
+            </ToastProvider>
+          </div>
+        </ClerkProvider>
       </body>
     </html>
   );

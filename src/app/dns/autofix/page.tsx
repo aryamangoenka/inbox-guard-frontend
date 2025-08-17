@@ -3,12 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import {
-  dnsAutofixPlan,
-  dnsAutofixApply,
-  type AutofixChange,
-  ApiError,
-} from "@/lib/api";
+import { type AutofixChange, ApiError, useApi } from "@/lib/api";
 import { getDefaultDomain, saveDomain } from "@/lib/domain";
 import { useToast } from "@/components/Toast";
 
@@ -72,6 +67,7 @@ function DiffRow({ change }: { change: AutofixChange }) {
 }
 
 export default function AutofixPage() {
+  const { apiFetch } = useApi();
   const [zone, setZone] = useState("");
   const [planning, setPlanning] = useState(false);
   const [planErr, setPlanErr] = useState<string | null>(null);
@@ -95,7 +91,14 @@ export default function AutofixPage() {
     saveDomain(zone.trim());
 
     try {
-      const res = await dnsAutofixPlan(zone.trim());
+      const response = await apiFetch("/dns/autofix", {
+        method: "POST",
+        body: JSON.stringify({ zone_root: zone.trim(), apply: false }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const res = await response.json();
       setChanges(res?.changes ?? []);
     } catch (e: unknown) {
       setPlanErr(e instanceof Error ? e.message : "Failed to plan changes");
@@ -111,13 +114,20 @@ export default function AutofixPage() {
     setApplyErr(null);
 
     try {
-      const res = await dnsAutofixApply(zone.trim());
+      const response = await apiFetch("/dns/autofix", {
+        method: "POST",
+        body: JSON.stringify({ zone_root: zone.trim(), apply: true }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const res = await response.json();
       setChanges(res?.changes ?? []);
       setMsg("Autofix applied successfully!");
     } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 401) {
         setApplyErr(
-          "Missing or invalid API key. Set NEXT_PUBLIC_API_KEY in your environment."
+          "Authentication required. Please log in to apply DNS changes."
         );
       } else {
         setApplyErr(e instanceof Error ? e.message : "Failed to apply changes");
@@ -136,7 +146,7 @@ export default function AutofixPage() {
 
         <div className="mb-8 flex items-center space-x-4">
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
@@ -261,7 +271,3 @@ export default function AutofixPage() {
     </div>
   );
 }
-
-
-
-

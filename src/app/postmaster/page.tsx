@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { apiGet, apiPost, ApiError, getPostmasterMetrics } from "@/lib/api";
+import { ApiError, useApi } from "@/lib/api";
 import { getDefaultDomain, saveDomain } from "@/lib/domain";
 import { FormCard } from "@/components/FormCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -47,6 +47,7 @@ interface LatestData {
 
 export default function PostmasterPage() {
   const { showToast } = useToast();
+  const { apiFetch } = useApi();
   const [domain, setDomain] = useState("");
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(false);
@@ -63,16 +64,20 @@ export default function PostmasterPage() {
       if (!checkDomain) return;
 
       try {
-        const latest = await apiGet<LatestData>("/postmaster/latest", {
-          domain: checkDomain,
-        });
+        const response = await apiFetch(
+          `/postmaster/latest?domain=${encodeURIComponent(checkDomain)}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const latest = (await response.json()) as LatestData;
         setLatestData(latest);
       } catch (err) {
         // Latest data is optional, don't show error
         console.warn("Failed to load latest postmaster data:", err);
       }
     },
-    [domain]
+    [domain, apiFetch]
   );
 
   const loadMetricsData = useCallback(
@@ -85,8 +90,16 @@ export default function PostmasterPage() {
       setMetricsError(null);
 
       try {
-        const metricsData = await getPostmasterMetrics(checkDomain, checkDays);
-        setMetrics(metricsData);
+        const response = await apiFetch(
+          `/postmaster/metrics?domain=${encodeURIComponent(
+            checkDomain
+          )}&days=${checkDays}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const metricsData = await response.json();
+        setMetrics(metricsData.data || []);
       } catch (err) {
         if (err instanceof ApiError) {
           setMetricsError(err.message);
@@ -98,7 +111,7 @@ export default function PostmasterPage() {
         setMetricsLoading(false);
       }
     },
-    [domain, days]
+    [domain, days, apiFetch]
   );
 
   useEffect(() => {
@@ -122,14 +135,17 @@ export default function PostmasterPage() {
 
     try {
       // Pull new data
-      const pullResult = await apiPost<PostmasterResult>(
-        "/postmaster/pull-daily",
-        {
+      const response = await apiFetch("/postmaster/pull-daily", {
+        method: "POST",
+        body: JSON.stringify({
           domain: domain.trim(),
           days,
-        },
-        true // requireKey=true to send X-API-Key header
-      );
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const pullResult = (await response.json()) as PostmasterResult;
       setResult(pullResult);
 
       // Show success toast
@@ -144,7 +160,7 @@ export default function PostmasterPage() {
       if (err instanceof ApiError) {
         if (err.status === 401) {
           const errorMessage =
-            "Missing or invalid API key. Set NEXT_PUBLIC_API_KEY (or provide a key in settings).";
+            "Authentication required. Please log in to access this feature.";
           setError(errorMessage);
           showToast(errorMessage, "error");
         } else {
@@ -218,7 +234,7 @@ export default function PostmasterPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center space-x-4">
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />

@@ -1,8 +1,33 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+"use client";
+
+import { useAuth } from "@clerk/nextjs";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || process.env.NEXT_PUBLIC_API_URL;
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
 if (!API_BASE) {
-  throw new Error('NEXT_PUBLIC_API_URL is required. Please set it in your environment variables.');
+  throw new Error('NEXT_PUBLIC_API_BASE or NEXT_PUBLIC_API_URL is required. Please set it in your environment variables.');
+}
+
+// Clerk v6 JWT-based API helper
+export function useApi() {
+  const { getToken } = useAuth();
+  
+  const apiFetch = async (path: string, init: RequestInit = {}) => {
+    const token = await getToken({ template: "default" }); // configure template "default" in Clerk
+    const headers = new Headers(init.headers || {});
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    headers.set("Content-Type", "application/json");
+    
+    return fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers,
+      credentials: "include",
+      mode: "cors",
+    });
+  };
+
+  return { apiFetch };
 }
 
 interface ApiResponse<T> {

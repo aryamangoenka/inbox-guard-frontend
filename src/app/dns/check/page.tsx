@@ -9,8 +9,10 @@ import {
   Info,
   Zap,
   Search,
+  ArrowLeft,
 } from "lucide-react";
-import { apiGet, apiPost, ApiError } from "@/lib/api";
+import Link from "next/link";
+import { ApiError, useApi } from "@/lib/api";
 import { getDefaultDomain, saveDomain } from "@/lib/domain";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PageHeader } from "@/components/PageHeader";
@@ -82,6 +84,7 @@ function StatusCard({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Icon className="h-6 w-6 text-gray-700" />
+
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         </div>
         <StatusBadge status={status} />
@@ -118,6 +121,7 @@ function InfoCard({
 }
 
 export default function DNSCheckPage() {
+  const { apiFetch } = useApi();
   const [zoneRoot, setZoneRoot] = useState("");
   const [fqdn, setFqdn] = useState("");
   const [loading, setLoading] = useState(false);
@@ -149,8 +153,13 @@ export default function DNSCheckPage() {
         params.fqdn = fqdn.trim();
       }
 
-      const response = await apiGet<DNSCheckResult>("/dns/check", params);
-      setResult(response);
+      const searchParams = new URLSearchParams(params);
+      const response = await apiFetch(`/dns/check?${searchParams.toString()}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const result = (await response.json()) as DNSCheckResult;
+      setResult(result);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
@@ -169,25 +178,33 @@ export default function DNSCheckPage() {
     setError(null);
 
     try {
-      const response = await apiPost<AutofixResult>(
-        "/dns/autofix",
-        { zone_root: zoneRoot.trim(), apply },
-        apply // require API key for apply
-      );
-      setAutofixResult(response);
+      const response = await apiFetch("/dns/autofix", {
+        method: "POST",
+        body: JSON.stringify({ zone_root: zoneRoot.trim(), apply }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const result = (await response.json()) as AutofixResult;
+      setAutofixResult(result);
 
       // Refresh the DNS check after applying fixes
-      if (apply && response.success) {
+      if (apply && result.success) {
         // Refetch DNS data to show updated results
         try {
           const params: Record<string, string> = { zone_root: zoneRoot.trim() };
           if (fqdn.trim()) {
             params.fqdn = fqdn.trim();
           }
-          const refreshedData = await apiGet<DNSCheckResult>(
-            "/dns/check",
-            params
+          const searchParams = new URLSearchParams(params);
+          const refreshedResponse = await apiFetch(
+            `/dns/check?${searchParams.toString()}`
           );
+          if (!refreshedResponse.ok) {
+            throw new Error(`HTTP ${refreshedResponse.status}`);
+          }
+          const refreshedData =
+            (await refreshedResponse.json()) as DNSCheckResult;
           setResult(refreshedData);
         } catch {
           // If refresh fails, keep existing results
@@ -218,6 +235,17 @@ export default function DNSCheckPage() {
   return (
     <div className="bg-gradient-to-br from-gray-50 via-white to-blue-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back to Dashboard Link */}
+        <div className="mb-8 flex items-center space-x-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back to Dashboard
+          </Link>
+        </div>
+
         {/* Page Header */}
         <PageHeader
           title="DNS Security Check"

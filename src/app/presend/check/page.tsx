@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { postPresendCheck } from "@/lib/api";
+import { ApiError, useApi } from "@/lib/api";
 import { FormCard } from "@/components/FormCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { CopyButton } from "@/components/CopyButton";
@@ -23,6 +23,7 @@ interface PresendResult {
 
 export default function PresendCheckPage() {
   const { showToast } = useToast();
+  const { apiFetch } = useApi();
   const [domain, setDomain] = useState("branddeliverability.org");
   const [rawHeaders, setRawHeaders] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,23 +41,33 @@ export default function PresendCheckPage() {
     setError(null);
 
     try {
-      const response = await postPresendCheck({
-        domain: domain.trim(),
-        raw_headers: rawHeaders.trim() || undefined,
-        allow_override: allowOverride,
-        acknowledgments: allowOverride ? overrideChecked : [],
+      const response = await apiFetch("/presend/check", {
+        method: "POST",
+        body: JSON.stringify({
+          domain: domain.trim(),
+          raw_headers: rawHeaders.trim() || undefined,
+          allow_override: allowOverride,
+          acknowledgments: allowOverride ? overrideChecked : [],
+        }),
       });
-      setResult(response);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData?.detail || `presend/check ${response.status}`;
+        throw new ApiError(message, response.status, errorData);
+      }
+      const result = (await response.json()) as PresendResult;
+      setResult(result);
 
-      if (response.decision === "PASS") {
+      if (result.decision === "PASS") {
         showToast("Pre-send check passed!", "success");
-      } else if (response.decision === "PASS_WITH_OVERRIDE") {
+      } else if (result.decision === "PASS_WITH_OVERRIDE") {
         showToast("Override acknowledged - proceed with caution", "success");
       } else {
         showToast("Pre-send check blocked - review checklist", "error");
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Pre-send check failed";
+      const errorMessage =
+        err instanceof Error ? err.message : "Pre-send check failed";
       setError(errorMessage);
       showToast(errorMessage, "error");
     } finally {
@@ -74,14 +85,12 @@ export default function PresendCheckPage() {
     return "fail";
   };
 
-
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center space-x-4">
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />

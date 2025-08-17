@@ -1,30 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchRecentAlerts, type AlertItem, formatPct } from "@/lib/alerts";
+import { useEffect, useState, useCallback } from "react";
+import { type AlertItem, formatPct } from "@/lib/alerts";
+import { useApi } from "@/lib/api";
 
 export default function AlertsPage() {
+  const { apiFetch } = useApi();
   const [domain, setDomain] = useState<string>("");
   const [days, setDays] = useState<number>(30);
   const [items, setItems] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  async function load() {
+    const load = useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
-      setItems(await fetchRecentAlerts(domain || undefined, days));
+      const qs = new URLSearchParams();
+      if (domain) qs.set("domain", domain);
+      qs.set("days", String(days));
+      
+      const response = await apiFetch(`/alerts/recent?${qs.toString()}`);
+      if (!response.ok) {
+        throw new Error(`alerts/recent ${response.status}`);
+      }
+      const data = await response.json();
+      setItems(data?.data ?? []);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Failed to load alerts");
     } finally {
       setLoading(false);
     }
-  }
+  }, [apiFetch, domain, days]);
 
   useEffect(() => {
     load();
-  }, []); // initial load
+  }, [load]); // initial load
 
   return (
     <div className="min-h-screen bg-gray-50">
