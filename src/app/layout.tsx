@@ -44,12 +44,40 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  // Log warning in non-production if Clerk key is missing
+  if (!pk && process.env.NODE_ENV !== "production") {
+    console.warn(
+      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is missing. Authentication features will be disabled."
+    );
+  }
+
+  // Render without Clerk if key is missing
+  if (!pk) {
+    return (
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <div className="min-h-screen bg-gray-50">
+            <Navigation />
+            <ToastProvider>
+              <main className="flex-1">{children}</main>
+            </ToastProvider>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
+  // Render with Clerk if key is present
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ClerkProvider>
+        <ClerkProvider publishableKey={pk}>
           <div className="min-h-screen bg-gray-50">
             <Navigation />
             <ToastProvider>
