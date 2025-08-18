@@ -53,31 +53,13 @@ export default function RootLayout({
     );
   }
 
-  // Render without Clerk if key is missing
-  if (!pk) {
-    return (
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <div className="min-h-screen bg-gray-50">
-            <Navigation />
-            <ToastProvider>
-              <main className="flex-1">{children}</main>
-            </ToastProvider>
-          </div>
-        </body>
-      </html>
-    );
-  }
-
-  // Render with Clerk if key is present
+  // Always render with ClerkProvider, but handle missing key gracefully
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ClerkProvider publishableKey={pk}>
+        <ClerkProvider publishableKey={pk || ""}>
           <div className="min-h-screen bg-gray-50">
             <Navigation />
             <ToastProvider>
