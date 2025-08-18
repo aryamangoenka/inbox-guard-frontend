@@ -12,14 +12,14 @@ export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-    const load = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
       const qs = new URLSearchParams();
       if (domain) qs.set("domain", domain);
       qs.set("days", String(days));
-      
+
       const response = await apiFetch(`/alerts/recent?${qs.toString()}`);
       if (!response.ok) {
         throw new Error(`alerts/recent ${response.status}`);

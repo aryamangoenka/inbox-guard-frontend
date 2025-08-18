@@ -3,18 +3,21 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isPublic = createRouteMatcher([
   "/", "/login(.*)",
-  "/robots.ts", "/sitemap.ts", "/favicon.ico",
+  "/robots.txt", "/sitemap.xml", "/favicon.ico",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  
   if (!isPublic(req)) {
     await auth.protect();            // <-- no parentheses on auth; await it
   }
-});
+},{signInUrl: "/login"},);
 
 export const config = {
   matcher: [
-    "/((?!.+\\.[\\w]+$|_next).*)",   // exclude static files & /_next
-    "/", "/(api)(.*)",
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };
