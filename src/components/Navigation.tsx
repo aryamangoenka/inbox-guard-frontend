@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 const navigation = [{ name: "Dashboard", href: "/dashboard", icon: Home }];
 
@@ -116,6 +117,21 @@ export function Navigation() {
                 </div>
               )}
             </div>
+
+            {/* Auth (desktop) */}
+            <div className="ml-3 pl-3 border-l border-gray-200 flex items-center gap-2">
+              <SignedOut>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg border text-gray-700 hover:bg-gray-50"
+                >
+                  Login
+                </Link>
+              </SignedOut>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -185,6 +201,24 @@ export function Navigation() {
                     </Link>
                   );
                 })}
+              </div>
+
+              {/* Mobile Auth Section */}
+              <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+                <SignedOut>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg border text-gray-700 hover:bg-gray-50"
+                  >
+                    Login
+                  </Link>
+                </SignedOut>
+                <SignedIn>
+                  <div className="px-2 py-1">
+                    <UserButton afterSignOutUrl="/" />
+                  </div>
+                </SignedIn>
               </div>
             </div>
           </div>
