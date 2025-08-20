@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Info,
-  Zap,
   Search,
   ArrowLeft,
 } from "lucide-react";
@@ -17,7 +16,6 @@ import { getDefaultDomain, saveDomain } from "@/lib/domain";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PageHeader } from "@/components/PageHeader";
 import { SectionHeader } from "@/components/SectionHeader";
-import { JsonBlock } from "@/components/JsonBlock";
 import { CopyButton } from "@/components/CopyButton";
 
 interface DNSCheckResult {
@@ -34,26 +32,6 @@ interface DNSCheckResult {
       valid: boolean;
       record: string | null;
     };
-  };
-}
-
-interface AutofixResult {
-  success: boolean;
-  plan?: Array<{ action: string; reason: string }>;
-  changes?: Array<{
-    action: string;
-    record_id: string;
-    name: string;
-    content: string;
-  }>;
-  postcheck?: {
-    spf: {
-      exists: boolean;
-      valid: boolean;
-      lookup_count: number;
-      status: string;
-    };
-    dmarc: { exists: boolean; valid: boolean; record: string | null };
   };
 }
 
@@ -125,11 +103,7 @@ export default function DNSCheckPage() {
   const [zoneRoot, setZoneRoot] = useState("");
   const [fqdn, setFqdn] = useState("");
   const [loading, setLoading] = useState(false);
-  const [autofixLoading, setAutofixLoading] = useState(false);
   const [result, setResult] = useState<DNSCheckResult | null>(null);
-  const [autofixResult, setAutofixResult] = useState<AutofixResult | null>(
-    null
-  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -144,7 +118,6 @@ export default function DNSCheckPage() {
     setLoading(true);
     setError(null);
     setResult(null);
-    setAutofixResult(null);
     saveDomain(zoneRoot.trim());
 
     try {
@@ -168,56 +141,6 @@ export default function DNSCheckPage() {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAutofix = async (apply: boolean) => {
-    if (!zoneRoot.trim()) return;
-
-    setAutofixLoading(true);
-    setError(null);
-
-    try {
-      const response = await apiFetch("/dns/autofix", {
-        method: "POST",
-        body: JSON.stringify({ zone_root: zoneRoot.trim(), apply }),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const result = (await response.json()) as AutofixResult;
-      setAutofixResult(result);
-
-      // Refresh the DNS check after applying fixes
-      if (apply && result.success) {
-        // Refetch DNS data to show updated results
-        try {
-          const params: Record<string, string> = { zone_root: zoneRoot.trim() };
-          if (fqdn.trim()) {
-            params.fqdn = fqdn.trim();
-          }
-          const searchParams = new URLSearchParams(params);
-          const refreshedResponse = await apiFetch(
-            `/dns/check?${searchParams.toString()}`
-          );
-          if (!refreshedResponse.ok) {
-            throw new Error(`HTTP ${refreshedResponse.status}`);
-          }
-          const refreshedData =
-            (await refreshedResponse.json()) as DNSCheckResult;
-          setResult(refreshedData);
-        } catch {
-          // If refresh fails, keep existing results
-        }
-      }
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("An unexpected error occurred");
-      }
-    } finally {
-      setAutofixLoading(false);
     }
   };
 
@@ -249,7 +172,7 @@ export default function DNSCheckPage() {
         {/* Page Header */}
         <PageHeader
           title="DNS Security Check"
-          description="Verify your domain's SPF and DMARC configuration for optimal email security and deliverability."
+          description="Verify any public domain's SPF and DMARC configuration for optimal email security and deliverability."
           className="mb-12"
         />
 
@@ -271,7 +194,7 @@ export default function DNSCheckPage() {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-8">
           <SectionHeader
             title="Domain Configuration"
-            description="Enter your domain details to check DNS records"
+            description="Enter any public domain to check DNS records"
             className="mb-6"
           />
 
@@ -450,79 +373,35 @@ export default function DNSCheckPage() {
               </div>
             </StatusCard>
 
-            {/* Auto-Fix Section */}
+            {/* Autofix Information */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
               <SectionHeader
-                title="Auto-Fix Options"
-                description="Automatically resolve DNS configuration issues"
+                title="Need to Fix DNS Issues?"
+                description="Use the DNS Autofix tool to automatically resolve configuration problems"
                 className="mb-6"
               />
 
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => handleAutofix(false)}
-                    disabled={autofixLoading}
-                    className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
-                  >
-                    <Info className="h-4 w-4 mr-2" />
-                    {autofixLoading ? "Analyzing..." : "Preview Fixes"}
-                  </button>
-                  <button
-                    onClick={() => handleAutofix(true)}
-                    disabled={autofixLoading}
-                    className="inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-colors"
-                  >
-                    <Zap className="h-4 w-4 mr-2" />
-                    {autofixLoading ? "Applying..." : "Apply Fixes"}
-                  </button>
-                </div>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-start gap-3">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-sm text-amber-800">
-                        <span className="font-medium">Important:</span> Apply
-                        Fixes requires an API key and will make live DNS changes
-                        to your domain. Always preview changes first.
+                      <p className="text-sm text-blue-800">
+                        <span className="font-medium">Note:</span> DNS Autofix
+                        requires a Cloudflare API key and will make live DNS
+                        changes to your domain.
+                        <Link
+                          href="/dns/autofix"
+                          className="ml-1 text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Go to DNS Autofix →
+                        </Link>
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Autofix Results */}
-        {autofixResult && (
-          <div className="space-y-6">
-            {autofixResult.plan && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                <SectionHeader title="Fix Plan" className="mb-6" />
-                <JsonBlock data={autofixResult.plan} title="Planned Changes" />
-              </div>
-            )}
-
-            {autofixResult.changes && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                <SectionHeader title="Applied Changes" className="mb-6" />
-                <JsonBlock
-                  data={autofixResult.changes}
-                  title="DNS Changes Made"
-                />
-              </div>
-            )}
-
-            {autofixResult.postcheck && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                <SectionHeader title="Post-Check Results" className="mb-6" />
-                <JsonBlock
-                  data={autofixResult.postcheck}
-                  title="Updated DNS Status"
-                />
-              </div>
-            )}
           </div>
         )}
       </div>

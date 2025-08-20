@@ -169,9 +169,51 @@ export async function apiPost<T>(
 }
 
 export async function getPostmasterMetrics(domain: string, days = 14) {
-  const url = `/postmaster/metrics?domain=${encodeURIComponent(domain)}&days=${days}`;
+  const url = `/postmaster/stored-metrics?domain=${encodeURIComponent(domain)}&days=${days}`;
   const res = await fetchWithRetry<{ success: boolean; data: Array<{ date: string; spam_rate?: number; domain_reputation?: string }> }>(url);
   return res.data || []; // Return [] or [{ date, spam_rate, domain_reputation }]
+}
+
+
+export async function connectPostmasterDomain(body: {
+  domain: string;
+  auto_create_dns: boolean;
+}) {
+  const response = await fetch(`${API_BASE}/postmaster/connect`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const message = errorData?.detail || `postmaster/connect ${response.status}`;
+    const error = new ApiError(message, response.status, errorData);
+    throw error;
+  }
+
+  return response.json();
+}
+
+
+export async function verifyPostmasterDomain(domain: string) {
+  const response = await fetch(`${API_BASE}/postmaster/connect/${encodeURIComponent(domain)}/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const message = errorData?.detail || `postmaster/connect/verify ${response.status}`;
+    const error = new ApiError(message, response.status, errorData);
+    throw error;
+  }
+
+  return response.json();
 }
 
 export async function postPresendCheck(body: {

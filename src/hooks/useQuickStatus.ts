@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { apiGet } from '@/lib/api';
+import { useApi } from '@/lib/api';
 
 export type TileState<T> = {
   loading: boolean;
@@ -16,6 +16,14 @@ export type QuickStatus = {
 };
 
 export function useQuickStatus(domain: string) {
+  const { apiFetch } = useApi();
+  const apiFetchRef = useRef(apiFetch);
+  
+  // Update the ref when apiFetch changes
+  useEffect(() => {
+    apiFetchRef.current = apiFetch;
+  }, [apiFetch]);
+  
   const [status, setStatus] = useState<QuickStatus>({
     api: { loading: false },
     dns: { loading: false },
@@ -46,7 +54,8 @@ export function useQuickStatus(domain: string) {
   const fetchApiStatus = useCallback(async () => {
     updateTileState('api', { loading: true, error: undefined });
     try {
-      const result = await apiGet<{ status: string }>('/health');
+      const response = await apiFetchRef.current('/health');
+      const result = await response.json();
       updateTileState('api', {
         loading: false,
         data: { ok: result.status === 'ok' },
@@ -64,13 +73,8 @@ export function useQuickStatus(domain: string) {
     
     updateTileState('dns', { loading: true, error: undefined });
     try {
-      const result = await apiGet<{
-        success: boolean;
-        data: {
-          spf: { status: 'pass' | 'warn' | 'fail'; lookup_count: number };
-          dmarc: { exists: boolean; valid: boolean };
-        };
-      }>('/dns/check', { zone_root: domain });
+      const response = await apiFetchRef.current('/dns/check?zone_root=' + encodeURIComponent(domain));
+      const result = await response.json();
       
       updateTileState('dns', {
         loading: false,
@@ -93,14 +97,8 @@ export function useQuickStatus(domain: string) {
     
     updateTileState('dkim', { loading: true, error: undefined });
     try {
-      const result = await apiGet<{
-        success: boolean;
-        data: Array<{ content: string }>;
-      }>('/dns/records', {
-        zone_root: domain,
-        name: `${dkimSelector}.${domain}`,
-        type: 'CNAME',
-      });
+      const response = await apiFetchRef.current(`/dns/records?zone_root=${encodeURIComponent(domain)}&name=${encodeURIComponent(dkimSelector)}.${encodeURIComponent(domain)}&type=CNAME`);
+      const result = await response.json();
       
       updateTileState('dkim', {
         loading: false,
@@ -122,10 +120,8 @@ export function useQuickStatus(domain: string) {
     
     updateTileState('postmaster', { loading: true, error: undefined });
     try {
-      const result = await apiGet<{
-        success: boolean;
-        data: { spam_rate: number; domain_reputation: string } | null;
-      }>('/postmaster/latest', { domain });
+      const response = await apiFetchRef.current('/postmaster/latest?domain=' + encodeURIComponent(domain));
+      const result = await response.json();
       
       updateTileState('postmaster', {
         loading: false,

@@ -68,7 +68,9 @@ export default function PostmasterPage() {
           `/postmaster/latest?domain=${encodeURIComponent(checkDomain)}`
         );
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          const errorText = await response.text();
+          console.error("Latest data HTTP error:", response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         const latest = (await response.json()) as LatestData;
         setLatestData(latest);
@@ -77,7 +79,7 @@ export default function PostmasterPage() {
         console.warn("Failed to load latest postmaster data:", err);
       }
     },
-    [domain, apiFetch]
+    [apiFetch, domain]
   );
 
   const loadMetricsData = useCallback(
@@ -90,13 +92,21 @@ export default function PostmasterPage() {
       setMetricsError(null);
 
       try {
+        console.log(
+          "Loading metrics data for domain:",
+          checkDomain,
+          "days:",
+          checkDays
+        );
         const response = await apiFetch(
-          `/postmaster/metrics?domain=${encodeURIComponent(
+          `/postmaster/stored-metrics?domain=${encodeURIComponent(
             checkDomain
           )}&days=${checkDays}`
         );
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          const errorText = await response.text();
+          console.error("Metrics HTTP error:", response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         const metricsData = await response.json();
         setMetrics(metricsData.data || []);
@@ -104,25 +114,30 @@ export default function PostmasterPage() {
         if (err instanceof ApiError) {
           setMetricsError(err.message);
         } else {
-          setMetricsError("Failed to load metrics data");
+          setMetricsError(
+            `Failed to load metrics data: ${
+              err instanceof Error ? err.message : String(err)
+            }`
+          );
         }
         console.warn("Failed to load metrics data:", err);
       } finally {
         setMetricsLoading(false);
       }
     },
-    [domain, days, apiFetch]
+    [apiFetch, domain, days]
   );
 
   useEffect(() => {
     const defaultDomain = getDefaultDomain();
     setDomain(defaultDomain);
-    // Load latest data and metrics on mount
+
+    // Only load data if we have a domain and haven't loaded yet
     if (defaultDomain) {
       loadLatestData(defaultDomain);
       loadMetricsData(defaultDomain, days);
     }
-  }, [loadLatestData, loadMetricsData, days]);
+  }, [loadLatestData, loadMetricsData, days]); // Include dependencies
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,15 +258,43 @@ export default function PostmasterPage() {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Postmaster Tools</h1>
-          <p className="mt-2 text-gray-600">
-            View Google Postmaster metrics and trends
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Postmaster Tools
+              </h1>
+              <p className="mt-2 text-gray-600">
+                View Google Postmaster metrics and trends
+              </p>
+            </div>
+            <Link
+              href="/postmaster/connect"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Connect New Domain
+            </Link>
+          </div>
         </div>
 
         {/* Current Status */}
         {latestData && latestData.data && (
           <FormCard title="Current Status" className="mb-8">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Domain Metrics
+              </h3>
+              <button
+                onClick={() => {
+                  if (domain) {
+                    loadLatestData(domain);
+                    loadMetricsData(domain, days);
+                  }
+                }}
+                className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Refresh
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900 mb-2">
@@ -414,6 +457,13 @@ export default function PostmasterPage() {
                     <div className="text-red-500 text-center">
                       {metricsError}
                     </div>
+                    <div className="text-sm text-gray-500 text-center">
+                      This usually means no data has been pulled yet for this
+                      domain.
+                      <br />
+                      Try using &quot;Pull Metrics&quot; first to fetch data
+                      from Google Postmaster Tools.
+                    </div>
                     <button
                       onClick={() => loadMetricsData(domain, days)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -426,7 +476,11 @@ export default function PostmasterPage() {
                     <div className="text-center text-gray-500">
                       <div>No trend data yet</div>
                       <div className="text-sm mt-1">
-                        Try Pull Metrics, then refresh
+                        Use &quot;Pull Metrics&quot; to fetch data from Google
+                        Postmaster Tools
+                      </div>
+                      <div className="text-xs mt-2 text-gray-400">
+                        Data will be stored in the database for future viewing
                       </div>
                     </div>
                   </div>
@@ -485,6 +539,13 @@ export default function PostmasterPage() {
                     <div className="text-red-500 text-center">
                       {metricsError}
                     </div>
+                    <div className="text-sm text-gray-500 text-center">
+                      This usually means no data has been pulled yet for this
+                      domain.
+                      <br />
+                      Try using &quot;Pull Metrics&quot; first to fetch data
+                      from Google Postmaster Tools.
+                    </div>
                     <button
                       onClick={() => loadMetricsData(domain, days)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -497,7 +558,11 @@ export default function PostmasterPage() {
                     <div className="text-center text-gray-500">
                       <div>No trend data yet</div>
                       <div className="text-sm mt-1">
-                        Try Pull Metrics, then refresh
+                        Use &quot;Pull Metrics&quot; to fetch data from Google
+                        Postmaster Tools
+                      </div>
+                      <div className="text-xs mt-2 text-gray-400">
+                        Data will be stored in the database for future viewing
                       </div>
                     </div>
                   </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { RefreshCw, Play, Pause } from "lucide-react";
 import { useDomain } from "@/lib/domain";
 import { useQuickStatus } from "@/hooks/useQuickStatus";
